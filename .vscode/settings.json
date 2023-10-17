@@ -1,0 +1,29 @@
+{
+    "cSpell.enableFiletypes": [
+        "shellscript"
+    ],
+    "cSpell.words": [
+        "aarch",
+        "APPIMAGE",
+        "APPIMAGELAUNCHER",
+        "bname",
+        "boilerplates",
+        "buildpackage",
+        "createorig",
+        "DESKTOPINTEGRATION",
+        "envsubst",
+        "fakeroot",
+        "hicolor",
+        "inkscape",
+        "PKGVER",
+        "postinst",
+        "shirodeb",
+        "squashfs",
+        "trayicon",
+        "unar",
+        "unarchived",
+        "Unarchiving",
+        "unsquashfs",
+        "Uploadings"
+    ]
+}

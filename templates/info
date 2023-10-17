@@ -1,0 +1,19 @@
+{
+    "appid": "",
+    "name": "",
+    "version": "",
+    "arch": [
+        ""
+    ],
+    "permissions": {
+        "autostart": true,
+        "notification": true,
+        "trayicon": true,
+        "clipboard": true,
+        "account": true,
+        "bluetooth": true,
+        "camera": true,
+        "audio_record": true,
+        "installed_apps": true
+    }
+}

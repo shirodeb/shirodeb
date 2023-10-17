@@ -1,0 +1,7 @@
+#!env bash
+
+export LOCAL_DOWNLOAD_DIR="$HOME/Downloads"
+export DEB_UPLOAD_PATH="$HOME/Uploadings"
+export DEBFULLNAME=""
+export DEBEMAIL=""
+
