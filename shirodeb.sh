@@ -1,4 +1,4 @@
-#!env bash
+#!/bin/env bash
 
 SCRIPT_ROOT=$(dirname $(readlink -f $0))
 
