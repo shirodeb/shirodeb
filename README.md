@@ -4,6 +4,8 @@ ShiroDEB is a handy script-set for quickly packaging software into deb package i
 
 This script-set is depends on `bash` and not compatible with old-style `sh`
 
+[![asciicast](https://asciinema.org/a/yAoIWlQgPCRZ9KGVerzA9ai2w.svg)](https://asciinema.org/a/yAoIWlQgPCRZ9KGVerzA9ai2w)
+
 ---
 
 ## Depends
