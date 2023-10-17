@@ -19,8 +19,9 @@ export AUTHOR=""
 function test() {
     download
     local downloaded_files="${ret[@]}"
-    chmod +x "${download_fn[0]}"
-    DESKTOPINTEGRATION=1 APPIMAGE_SILENT_INSTALL=1 APPIMAGELAUNCHER_DISABLE=1 "${download_fn[0]}" --no-sandbox
+    chmod +x "${downloaded_files[0]}"
+    DESKTOPINTEGRATION=1 APPIMAGE_SILENT_INSTALL=1 APPIMAGELAUNCHER_DISABLE=1 "${downloaded_files[0]}" --no-sandbox ||
+        DESKTOPINTEGRATION=1 APPIMAGE_SILENT_INSTALL=1 APPIMAGELAUNCHER_DISABLE=1 "${downloaded_files[0]}"
 
     if zenity --question --no-wrap --text="App ${NAME} OK?"; then
         exit 0 # success
@@ -38,14 +39,14 @@ function build() {
     # Collect .desktop
     utils.desktop.collect "$APPIMAGE_DIR" "-maxdepth 1"
     # Modify .desktop
-    local RUN_FILE="/opt/apps/$PACKAGE/files/${UNARCHIVED_SRC_DIR[0]}/AppRun"
-    for desktop_file in $(find $APP_DIR/entries/applications); do
+    local RUN_FILE="/opt/apps/$PACKAGE/files/${UNARCHIVED_SRC_DIRS[0]}/AppRun"
+    for desktop_file in $(find $APP_DIR/entries/applications -name "*.desktop"); do
         utils.desktop.edit "Exec" "env DESKTOPINTEGRATION=1 APPIMAGE_SILENT_INSTALL=1 APPIMAGELAUNCHER_DISABLE=1 $RUN_FILE %U" $desktop_file
         utils.desktop.edit "TryExec" "$RUN_FILE" $desktop_file
     done
 
     # Collect icons
-    utils.icon.collect $DEB_SRC_DIR/usr/share/icons "-maxdepth 1"
+    utils.icon.collect $APPIMAGE_DIR "-maxdepth 1"
 
     # Fix chrome-sandbox on kernel 4.19
     utils.misc.chrome_sandbox_treat
