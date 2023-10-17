@@ -15,11 +15,11 @@ function __internal.download_snap_to() {
             grep 'code id="snap-install"' |
             sed "s#^.*<code id.*\?>\(.*\)</code>.*\$#\1#g" | sed "s/sudo.*install\s//"
     )
-    pushd $to_dir >/dev/null
+    pushd $to_dir
     local fn=$(echo $download_command | xargs snap download | tee /dev/stderr | grep -oP "install \K(.*)")
     mv $fn $filename
     rm -rf $(echo $fn | sed "s/\.snap$/.assert/")
-    popd >/dev/null
+    popd
     return 0
 }
 
@@ -154,4 +154,13 @@ function __internal.unar() {
         ;;
     esac
     return 0
+}
+
+# ===== Override built-in functions =====
+function pushd() {
+    builtin pushd "$@" >/dev/null
+}
+
+function popd() {
+    builtin popd "$@" >/dev/null
 }

@@ -161,7 +161,7 @@ function __internal.make.stage1() {
     unset ret
 
     # build "debian"
-    pushd "$PKG_DIR" >/dev/null
+    pushd "$PKG_DIR"
     dh_make --createorig -s -n -y >/dev/null || exit -1
 
     # rm unused files
@@ -181,11 +181,11 @@ function __internal.make.stage1() {
         jq "$(echo $REQUIRED_PERMISSIONS | awk -F, 'BEGIN{ORS=" | "} {for (i=1;i<=NF;i++){print ".permissions." $i " = true"}}' | sed 's/ | $//')" |
         jq '.appid = "'${PACKAGE}'" | .name = "'"${NAME}"'" | .version = "'${VERSION}'" | .arch[0] = "'${ARCH}'"' \
             >${APP_DIR}/info
-    popd >/dev/null
+    popd
 }
 
 function __internal.make.stage2() {
-    pushd "$PKG_DIR" >/dev/null
+    pushd "$PKG_DIR"
     if [[ $ARCH == "all" ]]; then
         fakeroot dpkg-buildpackage -us -uc -b -tc
     else
@@ -201,7 +201,7 @@ function __internal.make.stage2() {
     # done
     log.info "Finish, the output is under $OUTPUT_DIR/$VERSION/"
 
-    popd >/dev/null
+    popd
 }
 
 function make() {
@@ -246,7 +246,7 @@ function make() {
     fi
 
     # apply control.patch
-    pushd $PKG_DIR/debian/ >/dev/null
+    pushd $PKG_DIR/debian/
     envsubst <${TEMPLATES_ROOT}/control.patch | tee result.patch | patch -p0
     [[ $? == 0 ]] || exit -1
     if [[ -z $DESC2 ]]; then
@@ -259,7 +259,7 @@ function make() {
         fi
         sed -i "s#<DESC2>#$_DESC2#g" control
     fi
-    popd >/dev/null
+    popd
 
     if [[ $ONLY_STAGE_1 != 1 ]]; then
         __internal.make.stage2

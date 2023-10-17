@@ -2,8 +2,8 @@
 
 SCRIPT_ROOT=$(dirname $(readlink -f $0))
 
-source $SCRIPT_ROOT/utils.sh
 source $SCRIPT_ROOT/internal.sh
+source $SCRIPT_ROOT/utils.sh
 source $SCRIPT_ROOT/commands.sh
 
 log.info "ShiroDEB 1.0 ($SCRIPT_ROOT)"
