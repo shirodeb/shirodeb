@@ -29,19 +29,27 @@ fi
 
 source "$BUILD_SH"
 
+# Global variables from build.sh
+ROOT_DIR="${BUILD_SH%/*}"
+DOWNLOAD_DIR="$ROOT_DIR/downloads"
+OUTPUT_DIR="$ROOT_DIR/output"
+
+# Check if `function prepare` is available
+# `function prepare` is used for prepare meta info for build.sh
+if LC_ALL=C type prepare 2>&1 | grep -q function; then
+    log.info "Preparing meta info for build..."
+    prepare
+fi
+
 # Check necessary variables
 if [[ -z $PACKAGE || -z $VERSION || -z $ARCH ]]; then
     log.error "Some key variable is not present or empty in build.sh"
     exit -1
 fi
 
-# Global variables from build.sh
-ROOT_DIR="${BUILD_SH%/*}"
 PKGVER_NAME="${PACKAGE}-${VERSION}"
 SRC_DIR="$ROOT_DIR/src/$PKGVER_NAME"
 PKG_DIR="$ROOT_DIR/pkg/$PKGVER_NAME"
-DOWNLOAD_DIR="$ROOT_DIR/downloads"
-OUTPUT_DIR="$ROOT_DIR/output"
 APP_DIR="$PKG_DIR/opt/apps/$PACKAGE"
 
 mkdir -p $SRC_DIR $PKG_DIR $APP_DIR $DOWNLOAD_DIR $OUTPUT_DIR

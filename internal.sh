@@ -23,6 +23,24 @@ function __internal.download_snap_to() {
     return 0
 }
 
+function __internal.download.curl() {
+    local url="$1"
+    local to="$2"
+    if ! curl --retry 5 -Lo "$to" "$url"; then
+        return -1
+    fi
+    return 0
+}
+
+function __internal.download.aria2() {
+    local url="$1"
+    local to="$2"
+    if ! aria2c -c -x 16 -s 16 -d "$(dirname "$to")" "$url" -o "$(basename "$to")" --summary-interval=1; then
+        return -1
+    fi
+    return 0
+}
+
 # Required global variable:
 # - DOWNLOAD_DIR: Target download dir
 # Optional global variable:
@@ -62,10 +80,16 @@ function __internal.download() {
         if [[ $download_url =~ https://snapcraft.io/* ]]; then
             __internal.download_snap_to "$download_url" "$LOCAL_DD/$download_filename"
         else
-            if ! curl --retry 5 -Lo "$LOCAL_DD/$download_filename" "$download_url"; then
+            if [[ -z $PREFERRED_DOWNLOADER ]]; then
+                local PREFERRED_DOWNLOADER="aria2"
+            fi
+            case $PREFERRED_DOWNLOADER in
+            aria2) __internal.download.aria2 "$download_url" "$LOCAL_DD/$download_filename" ;;
+            curl) __internal.download.curl "$download_url" "$LOCAL_DD/$download_filename" ;;
+            esac
+            if [[ $? != 0 ]]; then
                 log.error "Downloading $download_filename from $download_url Failed"
                 rm -f "$LOCAL_DD/$download_filename"
-                exit -1
             fi
         fi
         ln -s "$LOCAL_DD/$download_filename" "$download_to"
