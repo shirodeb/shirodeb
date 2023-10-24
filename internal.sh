@@ -50,7 +50,7 @@ function __internal.download() {
     local download_result=()
     local url=""
 
-    for url in $@; do
+    for url in "$@"; do
         local download_to
         local download_url="$url"
         local download_filename
@@ -83,6 +83,7 @@ function __internal.download() {
             if [[ -z $PREFERRED_DOWNLOADER ]]; then
                 local PREFERRED_DOWNLOADER="aria2"
             fi
+            download_url=${download_url// /%20}
             case $PREFERRED_DOWNLOADER in
             aria2) __internal.download.aria2 "$download_url" "$LOCAL_DD/$download_filename" ;;
             curl) __internal.download.curl "$download_url" "$LOCAL_DD/$download_filename" ;;
@@ -90,6 +91,7 @@ function __internal.download() {
             if [[ $? != 0 ]]; then
                 log.error "Downloading $download_filename from $download_url Failed"
                 rm -f "$LOCAL_DD/$download_filename"
+                exit -1
             fi
         fi
         ln -s "$LOCAL_DD/$download_filename" "$download_to"
@@ -171,8 +173,8 @@ function __internal.unar() {
         case $file_type in
         *Debian*) __internal.unar.deb "$downloaded_file" "$unar_to_dir" ;;
         *)
-            log.error "$file_type is unrecognized."
-            exit -1
+            log.info "$file_type is unrecognized. Link file to \$SRC_DIR"
+            ln -s "../download/"
             ;;
         esac
         ;;

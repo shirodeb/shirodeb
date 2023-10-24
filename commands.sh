@@ -148,15 +148,21 @@ function download() {
 
 # Build it
 function __internal.make.stage1() {
-    UNARCHIVED_SRC_DIRS=() # build.sh could use it
+    SRC_NAMES=() # build.sh could use it
 
     download
     local downloaded_files="${ret[@]}"
 
     # unarchive source
     for downloaded_file in ${downloaded_files[@]}; do
-        __internal.unar "$downloaded_file" "$SRC_DIR"
-        UNARCHIVED_SRC_DIRS[${#UNARCHIVED_SRC_DIRS[@]}]=$ret
+        local ret=""
+        if [[ -z "$DO_NOT_UNARCHIVE" ]]; then
+            __internal.unar "$downloaded_file" "$SRC_DIR"
+        else
+            ret="$(basename "$downloaded_file")"
+            ln -s "$downloaded_file" "$SRC_DIR/$ret"
+        fi
+        SRC_NAMES[${#SRC_NAMES[@]}]=$ret
     done
     unset ret
 
@@ -228,7 +234,7 @@ function make() {
     if [[ $1 == "--no-build" ]]; then
         NO_BUILD=1
         log.info "Will not executing build function."
-        shift echo $BUILD_SH1
+        shift 1
     fi
 
     log.info "Building file structure"
