@@ -167,6 +167,7 @@ function __internal.unar() {
     *.snap) __internal.unar.snap "$downloaded_file" "$unar_to_dir" ;;
     *.tar.*) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
     *.zip) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
+    *.7z) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
     *)
         log.warn "Extension for $(basename $downloaded_file) is unrecognized. Using \`file\` to determinate"
         local file_type="$(file -b $(readlink -f $downloaded_file))"
@@ -174,7 +175,8 @@ function __internal.unar() {
         *Debian*) __internal.unar.deb "$downloaded_file" "$unar_to_dir" ;;
         *)
             log.info "$file_type is unrecognized. Link file to \$SRC_DIR"
-            ln -s "../download/"
+            ret="$(basename "$downloaded_file")"
+            ln -s "$downloaded_file" "$unar_to_dir/$ret"
             ;;
         esac
         ;;
