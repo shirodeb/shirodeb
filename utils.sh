@@ -139,6 +139,22 @@ function utils.icon.collect() {
     fi
 }
 
+# ===== Debian/control =====
+
+# Modify fields of control file
+# Usage: utils.deb_control.edit <field> <value>
+function utils.deb_control.edit() {
+    local field="$1"
+    local value="$2"
+    if [[ -z "$value" ]]; then
+        return
+    fi
+    local deb_control_file="$PKG_DIR/debian/control"
+    if [[ -f "$deb_control_file" ]]; then
+        sed -i "s#^\($field\):.*#\1: $value#g" "$deb_control_file"
+    fi
+}
+
 # ===== Misc =====
 
 # Find a file reverse up the file tree from current work dir

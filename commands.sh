@@ -251,21 +251,28 @@ function make() {
         build $@
     fi
 
-    # apply control.patch
-    pushd $PKG_DIR/debian/
-    envsubst <${TEMPLATES_ROOT}/control.patch | tee result.patch | patch -p0
-    [[ $? == 0 ]] || exit -1
+    # modify control
+    utils.deb_control.edit "Section" "$SECTION"
+    utils.deb_control.edit "Priority" "$PRIORITY"
+    utils.deb_control.edit "Provides" "$PROVIDES"
+    utils.deb_control.edit "Build-Depends" "$BUILD_DEPENDS"
+    utils.deb_control.edit "Homepage" "$HOMEPAGE"
+    utils.deb_control.edit "Architecture" "$ARCH"
+    utils.deb_control.edit "Depends" "$DEPENDS"
+    utils.deb_control.edit "Description" "$DESC1"
+    local deb_control_file="$PKG_DIR/debian/control"
+
     if [[ -z $DESC2 ]]; then
-        sed -i "s#<DESC2>##g" control
+        sed -i "/^\s/d" "$deb_control_file"
     else
+        sed -i "s/^\s.*/<DESC2>/" "$deb_control_file"
         if [ $(echo -e "$DESC2" | wc -l) = 1 ]; then
             local _DESC2=" $DESC2"
         else
             local _DESC2=$(echo -e "$DESC2" | sed ':a;N;$!ba;s/\n/\\n\\ /g;s/^/\\ /g')
         fi
-        sed -i "s#<DESC2>#$_DESC2#g" control
+        sed -i "s#<DESC2>#$_DESC2#g" "$deb_control_file"
     fi
-    popd
 
     if [[ $ONLY_STAGE_1 != 1 ]]; then
         __internal.make.stage2
