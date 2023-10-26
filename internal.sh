@@ -50,6 +50,11 @@ function __internal.download() {
     local download_result=()
     local url=""
 
+    if [[ -z "$@" ]]; then
+        ret="${download_result[@]}"
+        return 0
+    fi
+
     for url in "$@"; do
         local download_to
         local download_url="$url"

@@ -38,7 +38,7 @@ OUTPUT_DIR="$ROOT_DIR/output"
 # `function prepare` is used for prepare meta info for build.sh
 if LC_ALL=C type prepare 2>&1 | grep -q function; then
     log.info "Preparing meta info for build..."
-    prepare
+    prepare "$@"
 fi
 
 # Check necessary variables
