@@ -11,6 +11,7 @@
         "buildpackage",
         "createorig",
         "DESKTOPINTEGRATION",
+        "devel",
         "envsubst",
         "fakeroot",
         "hicolor",

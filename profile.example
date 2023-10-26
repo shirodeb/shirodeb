@@ -5,3 +5,5 @@ export DEB_UPLOAD_PATH="$HOME/Uploadings"
 export DEBFULLNAME=""
 export DEBEMAIL=""
 export PREFERRED_DOWNLOADER="" # aria2 or curl
+
+export INGREDIENTS_DIR="/opt/shirodeb-ingredients"

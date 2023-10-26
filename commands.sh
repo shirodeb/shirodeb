@@ -280,3 +280,12 @@ function make() {
 
     return 0
 }
+
+function ingredient() {
+    source "$SCRIPT_ROOT/ingredients/commands.sh"
+}
+
+function ingred() {
+    ingredient "$@"
+    return $?
+}
