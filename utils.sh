@@ -128,6 +128,7 @@ function utils.icon.collect() {
                     convert $png_icons -scale 512x512\! $ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}
                     convert $png_icons -scale 512x512\! $ICON_DIR/${sz}x${sz}/apps/$filename
                 else
+                    sz=$(utils.misc.power2 $sz)
                     mkdir -p $ICON_DIR/${sz}x${sz}/apps
                     cp $png_icons $ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}
                     cp $png_icons $ICON_DIR/${sz}x${sz}/apps/$filename
@@ -215,4 +216,9 @@ function utils.misc.read_control_from() {
     export PROVIDES=$(cat ${ORIG_CONTROL_FILE} | grep -oP "^Provides: \K(.*)$")
 
     return 0
+}
+
+# Get the nearest power of 2
+function utils.misc.power2() {
+    echo "x=l($1)/l(2); scale=0; 2^((x+0.5)/1)" | bc -l
 }
