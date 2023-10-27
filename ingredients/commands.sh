@@ -23,7 +23,7 @@ function what_is_used() {
 }
 
 # Add ingredients
-function add() {
+function ingredients.add() {
     local ingredient_name="$1"
     local type="${2:-devel}"
     local ingredient_root="$INGREDIENTS_DIR/$ingredient_name"
@@ -91,23 +91,27 @@ function add() {
         __ingredients_internal_clean_up
     else
         log.error "${type} environment for $ingredient_name is not existed."
-        exit -1
+        return -1
     fi
 
     log.info "$ingredient_name is added to the pot!"
 }
 
 # List all ingredients
-function list() {
+function ingredients.list() {
     /bin/ls -1 "$INGREDIENTS_DIR"
 }
 
 # Enter build environment
 function enter() {
     export PS1="\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\n(env)$ "
-    export -f add list
+    export -f ingredients.add ingredients.list
     export -f $(declare -F | grep -oP "log.*" | xargs)
     export -f $(declare -F | grep -oP "__ingredients.*" | xargs)
+    set -a
+    function list() { ingredients.list "$@"; }
+    function add() { ingredients.add "$@"; }
+    set +a
     /bin/bash --noprofile --norc
 }
 
