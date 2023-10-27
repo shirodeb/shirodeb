@@ -5,6 +5,8 @@ SCRIPT_ROOT=$(dirname $(readlink -f $0))
 source $SCRIPT_ROOT/internal.sh
 source $SCRIPT_ROOT/utils.sh
 source $SCRIPT_ROOT/commands.sh
+source $SCRIPT_ROOT/ingredients/internal.sh
+source $SCRIPT_ROOT/ingredients/commands.sh
 
 log.info "ShiroDEB 1.0 ($SCRIPT_ROOT)"
 
@@ -18,7 +20,7 @@ __NO_NEED_BUILD_SH=("start" "ingred" "ingredient")
 if [[ $(echo ${__NO_NEED_BUILD_SH[@]} | fgrep -w $1) ]]; then
     # Special treat for start command.
     "$@"
-    exit 0
+    exit $?
 fi
 
 BUILD_SH=$(utils.misc.find_up "build.sh")
@@ -29,6 +31,18 @@ if [[ ! -f "$BUILD_SH" ]]; then
 fi
 
 source "$BUILD_SH"
+
+if [[ ! -z "$INGREDIENTS[@]" ]]; then
+    log.info "Setup ingredients..."
+    for ing in "${INGREDIENTS[@]}"; do
+        if ingredients.add "$ing"; then
+            log.info "Ingredient $ing setup complete."
+        else
+            log.error "Ingredient $ing setup failed..."
+            exit -1
+        fi
+    done
+fi
 
 # Global variables from build.sh
 ROOT_DIR="${BUILD_SH%/*}"
