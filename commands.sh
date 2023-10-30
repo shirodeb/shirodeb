@@ -247,8 +247,12 @@ function make() {
     fi
 
     if [[ $NO_BUILD != 1 ]]; then
+        if [[ ! -z "$BUILD_DEPENDS" ]]; then
+            sudo apt install -y ${BUILD_DEPENDS//,/ }
+        fi
         log.info "Execute build function"
         build $@
+        # TODO: May ask user to remove build dependencies
     fi
 
     # Append depends and wrapper startup if ingredients is provided
