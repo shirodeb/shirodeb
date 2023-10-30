@@ -263,8 +263,8 @@ function make() {
         done
 
         if [[ -d "$APP_DIR/entries/applications" ]]; then
-            log.info "Wrapping desktop file..."
-            for desktop in $(find "$APP_DIR/entries/applications" -type f -name "*.desktop"); do
+            log.info "Wrapping desktop files..."
+            for desktop in $(find "$APP_DIR/entries/applications/" -type f -name "*.desktop"); do
                 # TODO: handle multi exec command in one desktop file
                 local EXEC_COMMAND_WITH_PARAM=$(grep -oP "^Exec=\K.*" "$desktop")
                 local EXEC_COMMAND
@@ -296,6 +296,7 @@ EOF
     utils.deb_control.edit "Homepage" "$HOMEPAGE"
     utils.deb_control.edit "Architecture" "$ARCH"
     utils.deb_control.edit "Depends" "$DEPENDS"
+    utils.deb_control.edit "Recommends" "$RECOMMENDS"
     utils.deb_control.edit "Description" "$DESC1"
     local deb_control_file="$PKG_DIR/debian/control"
 
