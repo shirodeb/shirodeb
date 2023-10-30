@@ -252,7 +252,7 @@ function make() {
     fi
 
     # Append depends and wrapper startup if ingredients is provided
-    if [[ ! -z "$INGREDIENTS[@]" ]]; then
+    if [[ ! -z "${INGREDIENTS[@]}" ]]; then
         local STARTUP_SCRIPT_PREFIX="${APP_DIR#$PKG_DIR}/files/si-startup-"
         local RUNTIME_EXPORT=""
 
