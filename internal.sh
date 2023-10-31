@@ -171,6 +171,9 @@ function __internal.unar() {
     *.AppImage) __internal.unar.app-image "$downloaded_file" "$unar_to_dir" ;;
     *.snap) __internal.unar.snap "$downloaded_file" "$unar_to_dir" ;;
     *.tar.*) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
+    *.txz) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
+    *.tbz) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
+    *.tgz) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
     *.zip) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
     *.7z) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
     *)
