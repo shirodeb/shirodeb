@@ -127,7 +127,7 @@ function __internal.unar.app-image() {
     local name="${bname/.AppImage/}"
     local base_dir="$2/$name"
     ret=$name
-    if [[ -d "base_dir" ]]; then
+    if [[ -d "$base_dir" ]]; then
         log.info "$(basename $1) is already unarchived"
         return 0
     fi

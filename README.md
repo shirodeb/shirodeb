@@ -10,7 +10,7 @@ This script-set is depends on `bash` and not compatible with old-style `sh`
 
 ## Depends
 
-* bash, sed, dh-make: necessary utils
+* bash, sed, dh-make, jq: necessary utils
 * imagemagick: for general image operations
 * inkscape: for converting svg icon to png
 * unsquashfs: for unarchiving .snap files

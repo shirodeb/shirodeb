@@ -67,7 +67,8 @@ function utils.desktop.collect() {
             utils.desktop.edit "Terminal" "false" $target_desktop_file
         done
     else
-        echo "No desktop file found"
+        log.warn "No desktop file found"
+        return -1
     fi
     return 0
 }
@@ -177,7 +178,7 @@ function utils.misc.get_current_arch() {
 # Write postinst script for chrome-sandbox
 function utils.misc.chrome_sandbox_treat() {
     # Check whether a chrome-sandbox existed
-    local chrome_sandboxes=($(find ${APP_DIR}/files -name "chrome-sandbox"))
+    local chrome_sandboxes=($(find ${APP_DIR}/files -name "chrome[-_]sandbox"))
 
     if [ ${#chrome_sandboxes[@]} -eq 0 ]; then
         return 0

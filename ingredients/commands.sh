@@ -6,8 +6,50 @@ function ingredients.what_is_used() {
 }
 
 # Add ingredients
+function ingredients.get_ingredient_full_name() {
+    if [[ -z "$ingredients_db" ]]; then
+        ingredients.refresh_index
+    fi
+
+    local triple=""
+    IFS='-' triple=($(echo "$@"))
+    local i_name="${triple[0]}"
+    local i_ver="${triple[1]}"
+    local i_arch="$(utils.misc.get_current_arch)"
+
+    if [[ $(jq -r ".\"$i_name\"" <<<"$ingredients_db") == "null" ]]; then
+        log.error "Ingredients $i_name does not exist"
+        return -1
+    fi
+
+    if [[ -z "$i_ver" ]]; then
+        i_ver=$(jq -r ".\"$i_name\".\"$i_arch\"[]" <<<"$ingredients_db" 2>/dev/null | sort --version-sort -r | head -1)
+        if [[ -z "$i_ver" ]]; then
+            log.error "Ingredients $i_name does not exist on $i_arch"
+            return -1
+        fi
+        log.info "Chose $i_ver for $i_name"
+    fi
+
+    if [[ $(jq -r ".\"$i_name\".\"$i_arch\" | index(\"$i_ver\")" <<<"$ingredients_db") == "null" ]]; then
+        if [[ $(jq -r ".\"$i_name\".\"$i_arch\"" <<<"$ingredients_db") == "null" ]]; then
+            log.error "Ingredients $i_name does not exist on $i_arch"
+            return -1
+        else
+            log.error "Ingredients $i_name has no version $i_ver on $i_arch"
+            return -1
+        fi
+    else
+        echo "$i_name-$i_ver-$i_arch"
+        return 0
+    fi
+}
+
 function ingredients.add() {
-    local ingredient_name="$1"
+    local ingredient_name="$(ingredients.get_ingredient_full_name $1)"
+    if [[ $? != 0 ]]; then
+        return -1
+    fi
     local type="${2:-devel}"
     local ingredient_root="$INGREDIENTS_DIR/$ingredient_name"
     if [[ ! -d "$ingredient_root" ]]; then
@@ -85,7 +127,29 @@ function ingredients.add() {
 
 # List all ingredients
 function ingredients.list() {
-    /bin/ls -1 "$INGREDIENTS_DIR"
+    # /bin/ls -1 "$INGREDIENTS_DIR"
+    if [[ -z "$ingredients_db" ]]; then
+        ingredients.refresh_index
+    fi
+    local table="\033[1;00m\033[0m"
+    local arches="$(jq -r '[keys[] as $k | .[$k] | keys[]] | unique[]' <<<"$ingredients_db")"
+    for arch in $arches; do
+        table="$table\t|\t\033[1;37m$arch\033[0m"
+    done
+    table="$table\n"
+    for i_name in $(jq -r 'keys | sort[]' <<<"$ingredients_db"); do
+        table="$table\033[1;33m$i_name\033[0m"
+        for arch in $arches; do
+            table="$table\t|\t"
+            for i_ver in $(jq -r ".\"$i_name\".\"$arch\"[]" <<<"$ingredients_db" 2>/dev/null); do
+                table="$table\033[1;36m$i_ver\033[0m, "
+            done
+            table=${table%*, }
+        done
+        table="$table\n"
+    done
+    table=${table%*\\n}
+    echo -e $table | column -s$'\t' -t
 }
 
 # Enter build environment
@@ -93,6 +157,7 @@ function ingredients.enter() {
     export PS1="\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\n(env)$ "
     export -f ingredients.add ingredients.list
     export -f $(declare -F | grep -oP "log.*" | xargs)
+    export -f $(declare -F | grep -oP "utils.*" | xargs)
     export -f $(declare -F | grep -oP "ingredients.*" | xargs)
     set -a
     function list() { ingredients.list "$@"; }
@@ -103,7 +168,10 @@ function ingredients.enter() {
 
 # Append runtime deps to DEPENDS
 function ingredients.add_runtime_depends() {
-    local ingredient_name="$1"
+    local ingredient_name="$(ingredients.get_ingredient_full_name $1)"
+    if [[ $? != 0 ]]; then
+        return -1
+    fi
     local ingredient_root="$INGREDIENTS_DIR/$ingredient_name"
     local ingredient_root="$(readlink -f "$ingredient_root")"
 
@@ -123,7 +191,10 @@ function ingredients.add_runtime_depends() {
 
 # Generate export statement for runtime
 function ingredients.make_runtime_export() {
-    local ingredient_name="$1"
+    local ingredient_name="$(ingredients.get_ingredient_full_name $1)"
+    if [[ $? != 0 ]]; then
+        return -1
+    fi
     local ingredient_root="$INGREDIENTS_DIR/$ingredient_name"
     local ingredient_root="$(readlink -f "$ingredient_root")"
     local ingredient_content_root="$ingredient_root"
@@ -171,4 +242,16 @@ EOF
         done
         ingredients.internal.clean_up
     fi
+}
+
+function ingredients.refresh_index() {
+    declare -g ingredients_db="{}"
+    local ig
+    for i in $(/bin/ls -1 "$INGREDIENTS_DIR"); do
+        IFS='-' read -ra ig <<<"$i"
+        local i_name="${ig[0]}"
+        local i_ver="${ig[1]}"
+        local i_arch="${ig[2]}"
+        ingredients_db=$(jq -c ".\"$i_name\".\"$i_arch\"+=[\"$i_ver\"]" <<<"$ingredients_db")
+    done
 }
