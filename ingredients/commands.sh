@@ -177,15 +177,15 @@ function ingredients.add_runtime_depends() {
 
     if [[ -f "$ingredient_root/base.sh" ]]; then
         source "$ingredient_root/base.sh"
-        ingredient_content_root="${INGREDIENT_ROOT:-$ingredient_content_root}"
+    fi
+    ingredient_content_root="${INGREDIENT_ROOT:-$ingredient_root}"
+    local depends="${INGREDIENT_DEPENDS_RUNTIME[@]}"
 
-        local depends="${INGREDIENT_DEPENDS_RUNTIME[@]}"
-
-        if [[ ! -z "${depends[@]}" ]]; then
-            for d in "${depends[@]}"; do
-                ingredients.internal.modify_env "prepend" "DEPENDS" "$d" ", "
-            done
-        fi
+    if [[ ! -z "${depends[@]}" ]]; then
+        for d in "${depends[@]}"; do
+            log.info "Add runtime-depends $d"
+            ingredients.internal.modify_env "prepend" "DEPENDS" "$d" ", "
+        done
     fi
 }
 
@@ -198,9 +198,15 @@ function ingredients.make_runtime_export() {
     local ingredient_root="$INGREDIENTS_DIR/$ingredient_name"
     local ingredient_root="$(readlink -f "$ingredient_root")"
     local ingredient_content_root="$ingredient_root"
+    local has_root=0
     if [[ -f "$ingredient_root/base.sh" ]]; then
         ingredients.internal.clean_up
         source "$ingredient_root/base.sh"
+        if [ ! -z "$INGREDIENT_ROOT" ]; then
+            # IMPORTANT NOTE: If INGREDIENT_ROOT is specified in base.sh
+            # Then there would be no bundle
+            has_root=1
+        fi
         ingredient_content_root="${INGREDIENT_ROOT:-$ingredient_content_root}"
         ingredients.internal.clean_up
     fi
@@ -212,14 +218,29 @@ function ingredients.make_runtime_export() {
         local la=$(declare -x | grep -oP " \K(PREPEND|APPEND)_ENV__[^=]*")
         local sa=$(declare -x | grep -oP " \K(SET|DEFAULT)_ENV__[^=]*")
 
+        if [ $has_root = 0 ]; then
+            if [ ! -z "$la" -o ! -z "$sa" ]; then
+                log.info "Bundling $ingredient_name"
+            fi
+        fi
+
         for l in ${la[@]}; do
             local type="$(tr "[A-Z]" "[a-z]" <<<${l%%_*})"
             local name="${l/${type^^}_ENV__/}"
             eval a="(\"\${$l[@]}\")"
             local sep=${a[0]}
 
+            local value=""
             for value in "${a[@]:1}"; do
-                local value=${value/\%ROOT\%/${ingredient_content_root}}
+                if [[ "$value" =~ "%ROOT%" ]]; then
+                    if [ $has_root = 1 ]; then
+                        value=${value/\%ROOT\%/${ingredient_content_root}}
+                    else
+                        ingredients.internal.copy_content "$value"
+                        value="$ret"
+                        unset ret
+                    fi
+                fi
                 ingredients.internal.modify_env_fake "$type" "$name" "$value" "$sep"
             done
         done
@@ -228,7 +249,18 @@ function ingredients.make_runtime_export() {
             local type="$(tr "[A-Z]" "[a-z]" <<<${s%%_*})"
             local name="${s/${type^^}_ENV__/}"
             local value=${!s}
-            local value=${value/\%ROOT\%/${ingredient_content_root}}
+
+            # TODO: Reuse this codes
+            if [[ "$value" =~ "%ROOT%" ]]; then
+                if [ $has_root = 1 ]; then
+                    value=${value/\%ROOT\%/${ingredient_content_root}}
+                else
+                    ingredients.internal.copy_content "$value"
+                    value="$ret"
+                    unset ret
+                fi
+            fi
+
             if [[ $type == "set" ]]; then
                 echo "export ${name}=\"$value\""
             elif [[ $type == "default" ]]; then

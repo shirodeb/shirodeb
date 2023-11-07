@@ -31,3 +31,16 @@ function ingredients.internal.clean_up() {
     unset $(declare -x | grep -oP " \K(PREPEND|APPEND|SET|DEFAULT)_ENV__[^=]*" | xargs)
     unset $(declare -- | grep -oP "^INGREDIENT_[^=]*" | xargs)
 }
+
+function ingredients.internal.copy_content() {
+    # Bundle into package
+    local v=${1%*/}
+    local bundle_root="/opt/apps/$PACKAGE/files/shirodeb-ingredients/$ingredient_name"
+    local r_value=${v/\%ROOT\%/${bundle_root}}
+
+    local local_content=${v/\%ROOT\%/${ingredient_content_root}}
+    local parent_root="$(dirname $(readlink -fm $r_value))"
+    mkdir -p "$PKG_DIR/$parent_root"
+    rsync -ap $local_content/ $PKG_DIR/$r_value
+    ret="$r_value"
+}
