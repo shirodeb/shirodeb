@@ -237,12 +237,10 @@ function make() {
         shift 1
     fi
 
-    log.info "Building file structure"
-
-    rm -rf "${PKG_DIR}"
-    mkdir -p ${PKG_DIR}
-
     if [[ $ONLY_STAGE_2 != 1 ]]; then
+        log.info "Building file structure"
+        rm -rf "${PKG_DIR}"
+        mkdir -p ${PKG_DIR}
         __internal.make.stage1
     fi
 

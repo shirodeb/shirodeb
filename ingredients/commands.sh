@@ -280,6 +280,7 @@ function ingredients.refresh_index() {
     declare -g ingredients_db="{}"
     local ig
     for i in $(/bin/ls -1 "$INGREDIENTS_DIR"); do
+        if [ ! -d "$INGREDIENTS_DIR/$i" ]; then continue; fi
         IFS='-' read -ra ig <<<"$i"
         local i_name="${ig[0]}"
         local i_ver="${ig[1]}"

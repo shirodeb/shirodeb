@@ -158,6 +158,14 @@ function __internal.unar.with-unar() {
     # TODO: guess whether tarballs is nested with a folder or something else and point it out
     ret=""
     unar -s -o "$2" "$1"
+    if [ $? != 0 ]; then
+        case "$1" in
+        # TODO: fallback more when needed
+        *.zip) unzip -o -d "$2" "$1" ;;
+        *) log.error "Unable to unar $1 and we have no fallback for this file extension." && exit -1 ;;
+        esac
+    fi
+    if [ $? != 0 ]; then exit -1; fi
     return 0
 }
 

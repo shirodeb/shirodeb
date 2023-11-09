@@ -42,7 +42,7 @@ function log.debug() { log.log "debug" $@; }
 # Edit desktop file entries using sed. Necessary escape for entry matching is needed for sed.
 # Usage: utils.desktop.edit <Entry> <Value> <Desktop File>
 function utils.desktop.edit() {
-    local CONFIG_FILE="$3"
+    local CONFIG_FILE="${3:-$APP_DIR/entries/applications/$PACKAGE.desktop}"
     sed -i "s#^\($1\)=.*#\1=$2#g" $CONFIG_FILE
     return $?
 }
