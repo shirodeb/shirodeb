@@ -109,16 +109,49 @@ function __internal.download() {
 # ===== Unarchive source =====
 
 function __internal.unar.deb() {
-    local folder_name=$(dpkg -f $1 Package)
-    ret=$folder_name
-    local base_dir="$2/$folder_name"
-    if [[ -f ${base_dir}/DEBIAN/control ]]; then
-        log.info "$(basename $1) is already unarchived"
-        return 0
+    local fields=$(LC_ALL=C dpkg -f "$1" 2>&1)
+
+    if [[ "$(echo "$fields" | wc -l)" == 1 ]] && [[ "$fields" =~ "tar.zst" ]]; then
+        # New style zstd deb package
+        log.info "Deb is packed by new style zstd format. Using unzstd to unarchive"
+
+        local tempd=$(mktemp -d)
+        [[ ! -d "$tempd" ]] && exit -1
+        pushd "$tempd"
+        ar x "$1" control.tar.zst
+        ar x "$1" data.tar.zst
+        mkdir DEBIAN
+        [ -f control.tar.zst ] && tar --use-compress-program=unzstd -xvf control.tar.zst -C DEBIAN
+        local package_name="$(grep Package DEBIAN/control | sed 's/^Package: //g')"
+        ret=$package_name
+        local base_dir="$2/$package_name"
+        if [[ -f ${base_dir}/DEBIAN/control ]]; then
+            log.info "$(basename $1) is already unarchived"
+            return 0
+        fi
+        mkdir -p "${base_dir}/"
+        mv DEBIAN "$base_dir"
+        mv data.tar.zst "$base_dir"
+        popd
+        rm -rf "$tempd"
+
+        pushd "$base_dir"
+        [[ -f data.tar.zst ]] && tar --use-compress-program=unzstd -xvf data.tar.zst
+        rm -f data.tar.zst
+        popd
+    else
+        # Regular old fashion deb package
+        local folder_name=$(dpkg -f $1 Package)
+        ret=$folder_name
+        local base_dir="$2/$folder_name"
+        if [[ -f ${base_dir}/DEBIAN/control ]]; then
+            log.info "$(basename $1) is already unarchived"
+            return 0
+        fi
+        mkdir -p "${base_dir}/DEBIAN"
+        dpkg -e "$1" "${base_dir}/DEBIAN"
+        dpkg -x "$1" "${base_dir}/"
     fi
-    mkdir -p "${base_dir}/DEBIAN"
-    dpkg -e "$1" "${base_dir}/DEBIAN"
-    dpkg -x "$1" "${base_dir}/"
     return 0
 }
 
