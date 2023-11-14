@@ -168,7 +168,10 @@ function __internal.make.stage1() {
 
     # build "debian"
     pushd "$PKG_DIR"
-    dh_make --createorig -s -n -y >/dev/null || exit -1
+    if ! dh_make --createorig -s -n -y >/dev/null; then
+        log.error "dh_make create failed. Please check your package name or something else."
+        exit -1
+    fi
 
     # rm unused files
     rm debian/*.ex debian/*.EX

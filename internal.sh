@@ -116,7 +116,10 @@ function __internal.unar.deb() {
         log.info "Deb is packed by new style zstd format. Using unzstd to unarchive"
 
         local tempd=$(mktemp -d)
-        [[ ! -d "$tempd" ]] && exit -1
+        if [[ ! -d "$tempd" ]]; then
+            log.error 'Temp directory not make'
+            exit -1
+        fi
         pushd "$tempd"
         ar x "$1" control.tar.zst
         ar x "$1" data.tar.zst
@@ -198,7 +201,10 @@ function __internal.unar.with-unar() {
         *) log.error "Unable to unar $1 and we have no fallback for this file extension." && exit -1 ;;
         esac
     fi
-    if [ $? != 0 ]; then exit -1; fi
+    if [ $? != 0 ]; then
+        log.error 'Unarchive failed'
+        exit -1
+    fi
     return 0
 }
 
