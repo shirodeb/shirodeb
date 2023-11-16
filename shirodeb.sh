@@ -35,8 +35,11 @@ source "$BUILD_SH"
 if [[ ! -z "$INGREDIENTS[@]" ]]; then
     log.info "Setup ingredients..."
     for ing in "${INGREDIENTS[@]}"; do
-        if ingredients.add "$ing"; then
+        ingredients.add "$ing"
+        if [ $? = 0 ]; then
             log.info "Ingredient $ing setup complete."
+        elif [ $? = 1 ]; then
+            log.info "Ingredient $ing has no devel environment."
         else
             log.error "Ingredient $ing setup failed..."
             exit -1

@@ -31,6 +31,8 @@ override_dh_installdocs:           # 不包含安装文档
 
 override_dh_md5sums:               # 不生成 MD5 校验文件
 
+override_dh_fixperms:			   # 不修正文件权限
+
 # dh_make generated override targets
 # This is example for Cmake (See https://bugs.debian.org/641051 )
 #override_dh_auto_configure:

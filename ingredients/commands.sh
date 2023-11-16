@@ -50,6 +50,11 @@ function ingredients.add() {
     if [[ $? != 0 ]]; then
         return -1
     fi
+    if [ -z $2 ]; then
+        local manually_specified=0
+    else
+        local manually_specified=1
+    fi
     local type="${2:-devel}"
     local ingredient_root="$INGREDIENTS_DIR/$ingredient_name"
     if [[ ! -d "$ingredient_root" ]]; then
@@ -118,8 +123,12 @@ function ingredients.add() {
 
         ingredients.internal.clean_up
     else
-        log.error "${type} environment for $ingredient_name is not existed."
-        return -1
+        if [ $manually_specified = 1 ]; then
+            log.error "${type} environment for $ingredient_name is not existed."
+            return -1
+        else
+            return 1
+        fi
     fi
 
     log.info "$ingredient_name is added to the pot!"
@@ -187,10 +196,11 @@ function ingredients.add_runtime_depends() {
             ingredients.internal.modify_env "prepend" "DEPENDS" "$d" ", "
         done
     fi
+    ingredients.internal.clean_up
 }
 
 # Generate export statement for runtime
-function ingredients.make_runtime_export() {
+function ingredients.make_runtime() {
     local ingredient_name="$(ingredients.get_ingredient_full_name $1)"
     if [[ $? != 0 ]]; then
         return -1
@@ -272,6 +282,27 @@ fi
 EOF
             fi
         done
+
+        # generate bind parameter
+        if [[ ! -z "$INGREDIENT_BIND" ]]; then
+            for bind in "${INGREDIENT_BIND[@]}"; do
+                local bind_target=$(awk -F '::' '{print $1}' <<<"$bind")
+                local bind_resource=$(awk -F '::' '{print $2}' <<<"$bind")
+
+                if [[ "$bind_resource" =~ "%ROOT%" ]]; then
+                    if [ $has_root = 1 ]; then
+                        bind_resource=${bind_resource/\%ROOT\%/${ingredient_content_root}}
+                    else
+                        ingredients.internal.copy_content "$bind_resource"
+                        bind_resource="$ret"
+                        unset ret
+                    fi
+                fi
+
+                echo "#@BIND:--ro-bind \"$bind_resource\" \"$bind_target\""
+            done
+            unset bind
+        fi
         ingredients.internal.clean_up
     fi
 }

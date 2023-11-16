@@ -41,6 +41,14 @@ function ingredients.internal.copy_content() {
     local local_content=${v/\%ROOT\%/${ingredient_content_root}}
     local parent_root="$(dirname $(readlink -fm $r_value))"
     mkdir -p "$PKG_DIR/$parent_root"
-    rsync -ap $local_content/ $PKG_DIR/$r_value
+    if [[ -d $local_content ]]; then
+        rsync -ap "$local_content"/ "$PKG_DIR/$r_value"
+    else
+        local dir_name="$(dirname "$PKG_DIR/$r_value")"
+        if [[ ! -d "$dir_name" ]]; then
+            mkdir -p "$dir_name"
+        fi
+        cp -p "$local_content" "$dir_name"
+    fi
     ret="$r_value"
 }
