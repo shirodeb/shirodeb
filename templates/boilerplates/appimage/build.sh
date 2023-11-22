@@ -35,6 +35,7 @@ function build() {
 
     # Copy content
     cp -R $APPIMAGE_DIR $APP_DIR/files/
+    find $APP_DIR/files -type d -exec chmod 755 {} \;
 
     # Collect .desktop
     utils.desktop.collect "$APPIMAGE_DIR" "-maxdepth 1"

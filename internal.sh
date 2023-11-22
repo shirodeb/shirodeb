@@ -100,9 +100,9 @@ function __internal.download() {
             fi
         fi
         ln -s "$LOCAL_DD/$download_filename" "$download_to"
-        download_result[${#download_result[@]}]=$download_to
+        download_result[${#download_result[@]}]="$download_to"
     done
-    ret="${download_result[@]}"
+    ret=("${download_result[@]}")
     return 0
 }
 
@@ -212,7 +212,7 @@ function __internal.unar() {
     local downloaded_file="$1"
     local unar_to_dir="$2"
 
-    log.info "Unarchiving $(basename $downloaded_file)"
+    log.info "Unarchiving $(basename "$downloaded_file")"
     case "$downloaded_file" in
     *.deb) __internal.unar.deb "$downloaded_file" "$unar_to_dir" ;;
     *.AppImage) __internal.unar.app-image "$downloaded_file" "$unar_to_dir" ;;
@@ -224,8 +224,8 @@ function __internal.unar() {
     *.zip) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
     *.7z) __internal.unar.with-unar "$downloaded_file" "$unar_to_dir" ;;
     *)
-        log.warn "Extension for $(basename $downloaded_file) is unrecognized. Using \`file\` to determinate"
-        local file_type="$(file -b $(readlink -f $downloaded_file))"
+        log.warn "Extension for $(basename "$downloaded_file") is unrecognized. Using \`file\` to determinate"
+        local file_type="$(file -b $(readlink -f "$downloaded_file"))"
         case $file_type in
         *Debian*) __internal.unar.deb "$downloaded_file" "$unar_to_dir" ;;
         *)

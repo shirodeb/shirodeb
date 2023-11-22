@@ -125,18 +125,20 @@ function clean() {
 function purge() {
     local LOCAL_DD=${LOCAL_DOWNLOAD_DIR:-${DOWNLOAD_DIR}}
 
-    for url in ${URL[@]}; do
+    for url in "${URL[@]}"; do
         local download_filename
 
         if [[ "$url" =~ "::" ]]; then
             # Url is provided with preferred filename
-            download_filename=$(awk -F '::' '{print $1}' <<<$url)
+            download_filename="$(awk -F '::' '{print $1}' <<<$url)"
         else
-            download_filename=$(basename $url)
+            download_filename="$(basename $url)"
         fi
 
-        rm -rf $DOWNLOAD_DIR/$download_filename
-        rm -rf $LOCAL_DD/$download_filename
+        log.info "Purging $DOWNLOAD_DIR/$download_filename"
+        rm -rf "$DOWNLOAD_DIR/$download_filename"
+        log.info "Purging $LOCAL_DD/$download_filename"
+        rm -rf "$LOCAL_DD/$download_filename"
     done
     return 0
 }
@@ -151,10 +153,10 @@ function __internal.make.stage1() {
     SRC_NAMES=() # build.sh could use it
 
     download
-    local downloaded_files="${ret[@]}"
+    local downloaded_files=("${ret[@]}")
 
     # unarchive source
-    for downloaded_file in ${downloaded_files[@]}; do
+    for downloaded_file in "${downloaded_files[@]}"; do
         local ret=""
         if [[ -z "$DO_NOT_UNARCHIVE" ]]; then
             __internal.unar "$downloaded_file" "$SRC_DIR"
