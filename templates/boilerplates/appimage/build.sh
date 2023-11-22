@@ -34,20 +34,21 @@ function build() {
     APPIMAGE_DIR=${SRC_DIR}/${SRC_NAMES[0]}
 
     # Copy content
-    cp -R $APPIMAGE_DIR $APP_DIR/files/
-    find $APP_DIR/files -type d -exec chmod 755 {} \;
+    cp -R "$APPIMAGE_DIR" $APP_DIR/files/
+    find "$APP_DIR/files" -type d -exec chmod 755 {} \;
 
+    local RUN_FILE="\"/opt/apps/$PACKAGE/files/${SRC_NAMES[0]}/AppRun\""
     # Collect .desktop
     utils.desktop.collect "$APPIMAGE_DIR" "-maxdepth 1"
     # Modify .desktop
-    local RUN_FILE="/opt/apps/$PACKAGE/files/${SRC_NAMES[0]}/AppRun"
-    for desktop_file in $(find $APP_DIR/entries/applications -name "*.desktop"); do
-        utils.desktop.edit "Exec" "env DESKTOPINTEGRATION=1 APPIMAGE_SILENT_INSTALL=1 APPIMAGELAUNCHER_DISABLE=1 $RUN_FILE %U" $desktop_file
-        utils.desktop.edit "TryExec" "$RUN_FILE" $desktop_file
+    for desktop_file in "${ret[@]}"; do
+        utils.desktop.edit "Exec" "env DESKTOPINTEGRATION=1 APPIMAGE_SILENT_INSTALL=1 APPIMAGELAUNCHER_DISABLE=1 $RUN_FILE %U" "$desktop_file"
+        utils.desktop.edit "TryExec" "$RUN_FILE" "$desktop_file"
     done
+    unset ret
 
     # Collect icons
-    utils.icon.collect $APPIMAGE_DIR "-maxdepth 1"
+    utils.icon.collect "$APPIMAGE_DIR" "-maxdepth 1"
 
     # Fix chrome-sandbox on kernel 4.19
     utils.misc.chrome_sandbox_treat

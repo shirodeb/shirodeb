@@ -23,17 +23,15 @@ function build() {
     local EXEC_PATH=""
 
     # Collect .desktop
-    log.debug "Collect .desktop files..."
     utils.desktop.collect "$DEB_SRC_DIR/usr/share/applications"
     # Modify .desktop
-    for desktop_file in $(find $APP_DIR/entries/applications -name "*.desktop"); do
-        utils.desktop.edit "Exec" "/opt/apps/$PACKAGE/files/${EXEC_PATH} %U" $desktop_file
-        utils.desktop.edit "TryExec" "/opt/apps/$PACKAGE/files/${EXEC_PATH}" $desktop_file
+    for desktop_file in "${ret[@]}"; do
+        utils.desktop.edit "Exec" "\"/opt/apps/$PACKAGE/files/${EXEC_PATH}\" %U" "$desktop_file"
+        utils.desktop.edit "TryExec" "\"/opt/apps/$PACKAGE/files/${EXEC_PATH}\"" "$desktop_file"
     done
 
     # Collect icons
-    log.debug "Collect icons..."
-    utils.icon.collect $DEB_SRC_DIR/usr/share/icons
+    utils.icon.collect "$DEB_SRC_DIR/usr/share/icons"
 
     # Fix chrome-sandbox on kernel 4.19
     utils.misc.chrome_sandbox_treat
