@@ -65,7 +65,7 @@ function __internal.download() {
             download_filename=$(awk -F '::' '{print $1}' <<<$url)
             download_url=$(awk -F '::' '{print $2}' <<<$url)
         else
-            download_filename=$(basename $url)
+            download_filename="$(basename "$url")"
         fi
         download_to=${DOWNLOAD_DIR}/${download_filename}
 
@@ -129,7 +129,7 @@ function __internal.unar.deb() {
         ret=$package_name
         local base_dir="$2/$package_name"
         if [[ -f ${base_dir}/DEBIAN/control ]]; then
-            log.info "$(basename $1) is already unarchived"
+            log.info "$(basename "$1") is already unarchived"
             return 0
         fi
         mkdir -p "${base_dir}/"
@@ -148,7 +148,7 @@ function __internal.unar.deb() {
         ret=$folder_name
         local base_dir="$2/$folder_name"
         if [[ -f ${base_dir}/DEBIAN/control ]]; then
-            log.info "$(basename $1) is already unarchived"
+            log.info "$(basename "$1") is already unarchived"
             return 0
         fi
         mkdir -p "${base_dir}/DEBIAN"
@@ -159,17 +159,17 @@ function __internal.unar.deb() {
 }
 
 function __internal.unar.app-image() {
-    local bname=$(basename "$1")
+    local bname="$(basename "$1")"
     local name="${bname/.AppImage/}"
     local base_dir="$2/$name"
     ret=$name
     if [[ -d "$base_dir" ]]; then
-        log.info "$(basename $1) is already unarchived"
+        log.info "$(basename "$1") is already unarchived"
         return 0
     fi
     chmod +x "$1"
     env DESKTOPINTEGRATION=1 APPIMAGE_SILENT_INSTALL=1 APPIMAGELAUNCHER_DISABLE=1 "$1" --appimage-extract
-    mv ./squashfs-root $base_dir
+    mv ./squashfs-root "$base_dir"
     return 0
 }
 
@@ -183,7 +183,7 @@ function __internal.unar.snap() {
     local base_dir="$2/$name"
     ret=$name
     if [[ $(/usr/bin/ls -Aq "$base_dir") != "" ]]; then
-        log.info "$(basename $1) is already unarchived"
+        log.info "$(basename "$1") is already unarchived"
         return 0
     fi
     unsquashfs -f -d "$base_dir" "$1"

@@ -43,28 +43,35 @@ function log.debug() { log.log "debug" $@; }
 # Usage: utils.desktop.edit <Entry> <Value> <Desktop File>
 function utils.desktop.edit() {
     local CONFIG_FILE="${3:-$APP_DIR/entries/applications/$PACKAGE.desktop}"
-    sed -i "s#^\($1\)=.*#\1=$2#g" $CONFIG_FILE
+    sed -i "s#^\($1\)=.*#\1=$2#g" "$CONFIG_FILE"
     return $?
 }
 
 # Usage: utils.desktop.collect <search-root> [additional-find-parameters]
+# Return:
+#   ret: array contains collected desktop's path
 function utils.desktop.collect() {
-    local SEARCH_ROOT="$1"
+    local SEARCH_ROOT="${1%/}"
     local FIND_PARAM="$2"
+    log.info "Collecting desktop files under ${SEARCH_ROOT#$ROOT_DIR/}"
     local DESKTOP_DIR=$APP_DIR/entries/applications
     mkdir -p $DESKTOP_DIR
-    local desktop_files=($(find $SEARCH_ROOT $FIND_PARAM -name "*.desktop"))
+    local desktop_files=()
+    readarray -d '' desktop_files < <(find "$SEARCH_ROOT" $FIND_PARAM -name "*.desktop" -print0)
+    ret=()
 
     if [ ${#desktop_files[@]} -gt 0 ]; then
-        local common=$({ for i in ${desktop_files[@]}; do echo $(basename ${i%.[^.]*}); done; } | sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D')
-        common=$(basename $common)
+        local common=$({ for i in "${desktop_files[@]}"; do echo $(basename "${i%.[^.]*}"); done; } | sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D')
+        common=$(basename "$common")
 
-        for desktop_file in ${desktop_files[@]}; do
-            local filename=$(basename $desktop_file)
+        for desktop_file in "${desktop_files[@]}"; do
+            local filename=$(basename "$desktop_file")
             local target_desktop_file="$DESKTOP_DIR/${filename/$common/$PACKAGE}"
-            cp "$desktop_file" $target_desktop_file
-            utils.desktop.edit "Icon" "$PACKAGE" $target_desktop_file
-            utils.desktop.edit "Terminal" "false" $target_desktop_file
+            cp "$desktop_file" "$target_desktop_file"
+            utils.desktop.edit "Icon" "$PACKAGE" "$target_desktop_file"
+            utils.desktop.edit "Terminal" "false" "$target_desktop_file"
+            log.debug "Collected desktop file: ${desktop_file#$SEARCH_ROOT/} to ${target_desktop_file#$DESKTOP_DIR/}"
+            ret[${#ret[@]}]="$target_desktop_file"
         done
     else
         log.warn "No desktop file found"
@@ -93,47 +100,54 @@ function utils.icon.svg_to_png() {
 
 # Usage: utils.icon.collect <search-root> [additional-find-parameters]
 function utils.icon.collect() {
-    local SEARCH_ROOT="$1"
+    local SEARCH_ROOT="${1%/}"
     local FIND_PARAM="$2"
+    log.info "Collecting icons under ${SEARCH_ROOT#$ROOT_DIR/}"
     local ICON_DIR=$APP_DIR/entries/icons/hicolor/
     mkdir -p $ICON_DIR
-    local svg_icons=($(find $SEARCH_ROOT $FIND_PARAM -name "*.svg"))
-    local png_icons=($(find $SEARCH_ROOT $FIND_PARAM -name "*.png"))
+    local svg_icons=()
+    readarray -d '' svg_icons < <(find "$SEARCH_ROOT" $FIND_PARAM -name "*.svg" -print0)
+    local png_icons=()
+    readarray -d '' png_icons < <(find "$SEARCH_ROOT" $FIND_PARAM -name "*.png" -print0)
 
     if [ ${#svg_icons[@]} -gt 0 ]; then
         mkdir -p $ICON_DIR/scalable/apps/
         # if [ ${#svg_icons[@]} -eq 1]; then
         # cp ${svg_icons[0]} $ICON_DIR/scalable/apps/${PACKAGE}.svg
         # else
-        local common=$({ for i in ${svg_icons[@]}; do echo $(basename ${i%.[^.]*}); done; } | sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D')
-        common=$(basename $common)
-        for svg_icon in ${svg_icons[@]}; do
-            local filename=$(basename $svg_icon)
-            cp $svg_icon $ICON_DIR/scalable/apps/${filename/$common/$PACKAGE}
-            cp $svg_icon $ICON_DIR/scalable/apps/$filename
+        local common=$({ for i in "${svg_icons[@]}"; do echo $(basename "${i%.[^.]*}"); done; } | sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D')
+        common=$(basename "$common")
+        for svg_icon in "${svg_icons[@]}"; do
+            local filename=$(basename "$svg_icon")
+            cp "$svg_icon" "$ICON_DIR/scalable/apps/${filename/$common/$PACKAGE}"
+            cp "$svg_icon" "$ICON_DIR/scalable/apps/$filename"
+
+            log.debug "Collected svg icon file: ${svg_icon#$SEARCH_ROOT/}"
         done
         # fi
     else
         if [ ${#png_icons[@]} -gt 0 ]; then
-            local common=$({ for i in ${png_icons[@]}; do
-                local j=$(basename $i)
+            local common=$({ for i in "${png_icons[@]}"; do
+                local j=$(basename "$i")
                 echo ${j%.[^.]*}
             done; } | sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D')
-            common=$(basename $common)
-            for png_icon in ${png_icons[@]}; do
-                local filename=$(basename $png_icon)
-                local sz=$(identify $png_icon | cut -d' ' -f 3 | cut -d'x' -f 1)
+            common="$(basename "$common")"
+            for png_icon in "${png_icons[@]}"; do
+                local filename="$(basename "$png_icon")"
+                local sz=$(identify -format "%w" -ping -quiet "$png_icon")
                 if (($sz > 512)); then
                     sz=512
-                    mkdir -p $ICON_DIR/${sz}x${sz}/apps
-                    convert $png_icons -scale 512x512\! $ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}
-                    convert $png_icons -scale 512x512\! $ICON_DIR/${sz}x${sz}/apps/$filename
+                    mkdir -p "$ICON_DIR/${sz}x${sz}/apps"
+                    convert "$png_icon" -scale 512x512\! "$ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}"
+                    convert "$png_icon" -scale 512x512\! "$ICON_DIR/${sz}x${sz}/apps/$filename"
                 else
                     sz=$(utils.misc.power2 $sz)
-                    mkdir -p $ICON_DIR/${sz}x${sz}/apps
-                    cp $png_icons $ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}
-                    cp $png_icons $ICON_DIR/${sz}x${sz}/apps/$filename
+                    mkdir -p "$ICON_DIR/${sz}x${sz}/apps"
+                    cp "$png_icon" "$ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}"
+                    cp "$png_icon" "$ICON_DIR/${sz}x${sz}/apps/$filename"
                 fi
+
+                log.debug "Collected png icon file: ${png_icon#$SEARCH_ROOT/}"
             done
         else
             echo "No icon found under $SEARCH_ROOT"

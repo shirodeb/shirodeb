@@ -132,7 +132,7 @@ function purge() {
             # Url is provided with preferred filename
             download_filename="$(awk -F '::' '{print $1}' <<<$url)"
         else
-            download_filename="$(basename $url)"
+            download_filename="$(basename "$url")"
         fi
 
         log.info "Purging $DOWNLOAD_DIR/$download_filename"
