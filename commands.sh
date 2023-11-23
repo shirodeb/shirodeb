@@ -285,14 +285,15 @@ function make() {
         done
 
         if [[ -d "$APP_DIR/entries/applications" ]]; then
-            log.info "Wrapping desktop files..."
-            for desktop in $(find "$APP_DIR/entries/applications/" -type f -name "*.desktop"); do
+            for desktop in $(find "$APP_DIR/entries/applications/" -name "*.desktop"); do
+                log.info "Wrapping desktop files ${desktop#${APP_DIR}/entries/applications/}"
                 # TODO: handle multi exec command in one desktop file
-                local EXEC_COMMAND_WITH_PARAM=$(grep -oP "^Exec=\K.*" "$desktop")
+                local EXEC_COMMAND_WITH_PARAM=$(grep -oP "^Exec=\K.*" "$desktop" | sed 's#"#\\"#g')
                 local EXEC_COMMAND
                 eval "EXEC_COMMAND=($EXEC_COMMAND_WITH_PARAM)"
+                declare -p EXEC_COMMAND
                 EXEC_COMMAND=${EXEC_COMMAND[0]}
-                local SUFFIX=$(basename $EXEC_COMMAND)
+                local SUFFIX=$(basename "$(sed 's#"##g' <<<$EXEC_COMMAND)")
                 local fn="$STARTUP_SCRIPT_PREFIX$SUFFIX.sh"
 
                 if [[ ! -z "$BINDS" ]]; then
@@ -301,9 +302,11 @@ function make() {
                 fi
 
                 env EXEC_COMMAND="$EXEC_COMMAND" RUNTIME_EXPORT="$RUNTIME_EXPORT" EXEC="$EXEC" envsubst <$TEMPLATES_ROOT/si-startup-template.sh >$PKG_DIR/$fn
+                EXEC_COMMAND=$(sed 's#"#\\"#g' <<<$EXEC_COMMAND)
+                echo $EXEC_COMMAND $fn
 
                 chmod +x $PKG_DIR/$fn
-                sed -i "s#^\(Try\|\)Exec=$EXEC_COMMAND#\1Exec=$fn#" "$desktop"
+                sed -i "s#^\(Try\|\)Exec=$EXEC_COMMAND#\1Exec=\"$fn\"#" "$desktop"
             done
         fi
     fi
