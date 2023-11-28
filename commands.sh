@@ -157,6 +157,7 @@ function __internal.make.stage1() {
 
     # unarchive source
     for downloaded_file in "${downloaded_files[@]}"; do
+        if [ -z "$downloaded_file" ]; then continue; fi
         local ret=""
         if [[ -z "$DO_NOT_UNARCHIVE" ]]; then
             __internal.unar "$downloaded_file" "$SRC_DIR"

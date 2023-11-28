@@ -56,6 +56,7 @@ function __internal.download() {
     fi
 
     for url in "$@"; do
+        if [ -z "$url" ]; then continue; fi
         local download_to
         local download_url="$url"
         local download_filename
