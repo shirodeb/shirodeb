@@ -33,9 +33,9 @@ function log.log() {
 }
 
 function log.error() { log.log "error" "$@"; }
-function log.warn() { log.log "warn" $@; }
-function log.info() { log.log "info" $@; }
-function log.debug() { log.log "debug" $@; }
+function log.warn() { log.log "warn" "$@"; }
+function log.info() { log.log "info" "$@"; }
+function log.debug() { log.log "debug" "$@"; }
 
 # ===== Desktop =====
 
@@ -44,6 +44,14 @@ function log.debug() { log.log "debug" $@; }
 function utils.desktop.edit() {
     local CONFIG_FILE="${3:-$APP_DIR/entries/applications/$PACKAGE.desktop}"
     sed -i "s#^\($1\)=.*#\1=$2#g" "$CONFIG_FILE"
+    return $?
+}
+
+# Remove desktop file entries using sed. Necessary escape for entry matching is needed for sed.
+# Usage: utils.desktop.remove <Entry> <Desktop File>
+function utils.desktop.delete() {
+    local CONFIG_FILE="${2:-$APP_DIR/entries/applications/$PACKAGE.desktop}"
+    sed -i "\\#^\($1\)=.*#d" "$CONFIG_FILE"
     return $?
 }
 
@@ -57,7 +65,7 @@ function utils.desktop.collect() {
     local DESKTOP_DIR=$APP_DIR/entries/applications
     mkdir -p $DESKTOP_DIR
     local desktop_files=()
-    readarray -d '' desktop_files < <(find "$SEARCH_ROOT" $FIND_PARAM -name "*.desktop" -print0)
+    readarray -d '' desktop_files < <(find "$SEARCH_ROOT" $(xargs <<<$FIND_PARAM) -name "*.desktop" -print0)
     ret=()
 
     if [ ${#desktop_files[@]} -gt 0 ]; then
@@ -106,9 +114,9 @@ function utils.icon.collect() {
     local ICON_DIR=$APP_DIR/entries/icons/hicolor/
     mkdir -p $ICON_DIR
     local svg_icons=()
-    readarray -d '' svg_icons < <(find "$SEARCH_ROOT" $FIND_PARAM -name "*.svg" -print0)
+    readarray -d '' svg_icons < <(find "$SEARCH_ROOT" $(xargs <<<$FIND_PARAM) -name "*.svg" -print0)
     local png_icons=()
-    readarray -d '' png_icons < <(find "$SEARCH_ROOT" $FIND_PARAM -name "*.png" -print0)
+    readarray -d '' png_icons < <(find "$SEARCH_ROOT" $(xargs <<<$FIND_PARAM) -name "*.png" -print0)
 
     if [ ${#svg_icons[@]} -gt 0 ]; then
         mkdir -p $ICON_DIR/scalable/apps/

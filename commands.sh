@@ -171,8 +171,12 @@ function __internal.make.stage1() {
 
     # build "debian"
     pushd "$PKG_DIR"
-    if ! dh_make --createorig -s -n -y >/dev/null; then
+    local dh_make_result
+    dh_make_result="$(dh_make --createorig -s -n -y)"
+    if [[ "$?" != "0" ]]; then
         log.error "dh_make create failed. Please check your package name or something else."
+        log.debug "dh_make log:"
+        log.debug "$dh_make_result"
         exit -1
     fi
 
@@ -292,7 +296,7 @@ function make() {
                 local EXEC_COMMAND_WITH_PARAM=$(grep -oP "^Exec=\K.*" "$desktop" | sed 's#"#\\"#g')
                 local EXEC_COMMAND
                 eval "EXEC_COMMAND=($EXEC_COMMAND_WITH_PARAM)"
-                declare -p EXEC_COMMAND
+                # declare -p EXEC_COMMAND
                 EXEC_COMMAND=${EXEC_COMMAND[0]}
                 local SUFFIX=$(basename "$(sed 's#"##g' <<<$EXEC_COMMAND)")
                 local fn="$STARTUP_SCRIPT_PREFIX$SUFFIX.sh"
