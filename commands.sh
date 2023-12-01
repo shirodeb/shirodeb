@@ -359,3 +359,7 @@ function ingred() {
     ingredient "$@"
     return $?
 }
+
+function make_and_save() {
+    make && save
+}
