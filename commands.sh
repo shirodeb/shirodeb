@@ -172,7 +172,7 @@ function __internal.make.stage1() {
     # build "debian"
     pushd "$PKG_DIR"
     local dh_make_result
-    dh_make_result="$(dh_make --createorig -s -n -y)"
+    dh_make_result="$(dh_make --createorig -s -n -y -p "${PACKAGE}_$VERSION")"
     if [[ "$?" != "0" ]]; then
         log.error "dh_make create failed. Please check your package name or something else."
         log.debug "dh_make log:"

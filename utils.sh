@@ -145,15 +145,12 @@ function utils.icon.collect() {
                 local sz=$(identify -format "%w" -ping -quiet "$png_icon")
                 if (($sz > 512)); then
                     sz=512
-                    mkdir -p "$ICON_DIR/${sz}x${sz}/apps"
-                    convert "$png_icon" -scale 512x512\! "$ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}"
-                    convert "$png_icon" -scale 512x512\! "$ICON_DIR/${sz}x${sz}/apps/$filename"
                 else
                     sz=$(utils.misc.power2 $sz)
-                    mkdir -p "$ICON_DIR/${sz}x${sz}/apps"
-                    cp "$png_icon" "$ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}"
-                    cp "$png_icon" "$ICON_DIR/${sz}x${sz}/apps/$filename"
                 fi
+                mkdir -p "$ICON_DIR/${sz}x${sz}/apps"
+                convert "$png_icon" -scale ${sz}x${sz} -background none -gravity center -extent ${sz}x${sz} "$ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}"
+                convert "$png_icon" -scale ${sz}x${sz} -background none -gravity center -extent ${sz}x${sz} "$ICON_DIR/${sz}x${sz}/apps/$filename"
 
                 log.debug "Collected png icon file: ${png_icon#$SEARCH_ROOT/}"
             done
