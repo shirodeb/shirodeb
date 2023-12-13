@@ -16,6 +16,7 @@
         "fakeroot",
         "hicolor",
         "inkscape",
+        "pixmap",
         "PKGVER",
         "postinst",
         "shirodeb",

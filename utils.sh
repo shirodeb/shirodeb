@@ -48,10 +48,18 @@ function utils.desktop.edit() {
 }
 
 # Remove desktop file entries using sed. Necessary escape for entry matching is needed for sed.
-# Usage: utils.desktop.remove <Entry> <Desktop File>
+# Usage: utils.desktop.delete <Entry> <Desktop File>
 function utils.desktop.delete() {
     local CONFIG_FILE="${2:-$APP_DIR/entries/applications/$PACKAGE.desktop}"
     sed -i "\\#^\($1\)=.*#d" "$CONFIG_FILE"
+    return $?
+}
+
+# Append desktop file entries using sed. Necessary escape for entry matching is needed for sed.
+# Usage: utils.desktop.append <Entry> <Value> <Section> <Desktop File>
+function utils.desktop.append() {
+    local CONFIG_FILE="${4:-$APP_DIR/entries/applications/$PACKAGE.desktop}"
+    sed -i "/^\[$3\]$/a$1=$2" "$CONFIG_FILE"
     return $?
 }
 
@@ -93,17 +101,34 @@ function utils.desktop.collect() {
 # Convert svg icon to png.
 # Usage: utils.icon.svg_to_png <filepath> [size=512]
 function utils.icon.svg_to_png() {
-    local PNG_FILE="$1"
+    local SVG_FILE="$1"
     local SZ="${2:-512}"
-    W=$(inkscape -W $PNG_FILE | cut -d'.' -f 1)
-    H=$(inkscape -H $PNG_FILE | cut -d'.' -f 1)
-    png_fn=${PNG_FILE/\.svg/\.png}
+    W=$(inkscape -W $SVG_FILE | cut -d'.' -f 1)
+    H=$(inkscape -H $SVG_FILE | cut -d'.' -f 1)
+    local png_fn=${SVG_FILE/\.svg/\.png}
     if ((W > H)); then
         inkscape --export-png=$png_fn --export-dpi=96 --export-background-opacity=0 -w $SZ ${1}
     else
         inkscape --export-png=$png_fn --export-dpi=96 --export-background-opacity=0 -h $SZ ${1}
     fi
     convert $png_fn -background none -scale ${SZ}x${SZ} -gravity center -extent ${SZ}x${SZ} $png_fn
+}
+
+# Convert xpm icon to png.
+# Usage: utils.icon.xpm_to_png <filepath> [size]
+function utils.icon.xpm_to_png() {
+    local XPM_FILE="$1"
+    W=$(identify -format "%w" -ping -quiet "$XPM_FILE")
+    H=$(identify -format "%h" -ping -quiet "$XPM_FILE")
+    local M=0
+    if ((W > H)); then
+        M=$W
+    else
+        M=$H
+    fi
+    local SZ="${2:-$M}"
+    local png_fn=${XPM_FILE/\.xpm/\.png}
+    convert "$XPM_FILE" -background none -scale ${SZ}x${SZ} -gravity center -extent ${SZ}x${SZ} "$png_fn"
 }
 
 # Usage: utils.icon.collect <search-root> [additional-find-parameters]
@@ -115,8 +140,8 @@ function utils.icon.collect() {
     mkdir -p $ICON_DIR
     local svg_icons=()
     readarray -d '' svg_icons < <(find "$SEARCH_ROOT" $(xargs <<<$FIND_PARAM) -name "*.svg" -print0)
-    local png_icons=()
-    readarray -d '' png_icons < <(find "$SEARCH_ROOT" $(xargs <<<$FIND_PARAM) -name "*.png" -print0)
+    local pixmap_icons=()
+    readarray -d '' pixmap_icons < <(find "$SEARCH_ROOT" $(xargs <<<$FIND_PARAM) \( -name "*.png" -or -name "*.xpm" \) -print0)
 
     if [ ${#svg_icons[@]} -gt 0 ]; then
         mkdir -p $ICON_DIR/scalable/apps/
@@ -134,28 +159,29 @@ function utils.icon.collect() {
         done
         # fi
     else
-        if [ ${#png_icons[@]} -gt 0 ]; then
-            local common=$({ for i in "${png_icons[@]}"; do
+        if [ ${#pixmap_icons[@]} -gt 0 ]; then
+            local common=$({ for i in "${pixmap_icons[@]}"; do
                 local j=$(basename "$i")
                 echo ${j%.[^.]*}
             done; } | sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D')
             common="$(basename "$common")"
-            for png_icon in "${png_icons[@]}"; do
-                local filename="$(basename "$png_icon")"
-                local sz=$(identify -format "%w" -ping -quiet "$png_icon")
+            for pixmap_icon in "${pixmap_icons[@]}"; do
+                local filename="$(basename "$pixmap_icon" | rev | sed "s/^[^.]*\.//g" | rev)"
+                local sz=$(identify -format "%w" -ping -quiet "$pixmap_icon")
                 if (($sz > 512)); then
                     sz=512
                 else
                     sz=$(utils.misc.power2 $sz)
                 fi
                 mkdir -p "$ICON_DIR/${sz}x${sz}/apps"
-                convert "$png_icon" -scale ${sz}x${sz} -background none -gravity center -extent ${sz}x${sz} "$ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}"
-                convert "$png_icon" -scale ${sz}x${sz} -background none -gravity center -extent ${sz}x${sz} "$ICON_DIR/${sz}x${sz}/apps/$filename"
+                convert "$pixmap_icon" -scale ${sz}x${sz} -background none -gravity center -extent ${sz}x${sz} "$ICON_DIR/${sz}x${sz}/apps/${filename/$common/$PACKAGE}.png"
+                convert "$pixmap_icon" -scale ${sz}x${sz} -background none -gravity center -extent ${sz}x${sz} "$ICON_DIR/${sz}x${sz}/apps/$filename.png"
 
-                log.debug "Collected png icon file: ${png_icon#$SEARCH_ROOT/}"
+                log.debug "Collected pixmap icon file: ${pixmap_icon#$SEARCH_ROOT/}"
             done
         else
-            echo "No icon found under $SEARCH_ROOT"
+            log.warn "No icon found under $SEARCH_ROOT"
+            return -1
         fi
     fi
 }

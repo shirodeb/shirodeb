@@ -25,7 +25,7 @@ function install() {
         log.error "You have not make it yet."
         exit -1
     fi
-    sudo apt install $result_file
+    sudo apt install -y $result_file
 }
 
 function remove() {
@@ -221,6 +221,7 @@ function __internal.make.stage2() {
 }
 
 function make() {
+    unset make
     local ONLY_STAGE_1=0
     local ONLY_STAGE_2=0
     local NO_BUILD=0
@@ -294,6 +295,7 @@ function make() {
                 log.info "Wrapping desktop files ${desktop#${APP_DIR}/entries/applications/}"
                 # TODO: handle multi exec command in one desktop file
                 local EXEC_COMMAND_WITH_PARAM=$(grep -oP "^Exec=\K.*" "$desktop" | sed 's#"#\\"#g')
+                log.debug Exec command: $EXEC_COMMAND_WITH_PARAM
                 local EXEC_COMMAND
                 eval "EXEC_COMMAND=($EXEC_COMMAND_WITH_PARAM)"
                 # declare -p EXEC_COMMAND
