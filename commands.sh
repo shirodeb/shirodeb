@@ -60,7 +60,7 @@ function save() {
             utils.icon.svg_to_png $upload_path/../icon.svg
             rm $upload_path/../icon.svg
         else
-            sz=$(/usr/bin/ls -1r ${ICON_DIR}/ | head -1)
+            sz=$(/bin/ls -1r ${ICON_DIR}/ | head -1)
 
             png_icon=${ICON_DIR}/$sz/apps/${PACKAGE}.png
             if [[ -f $png_icon ]]; then
@@ -163,7 +163,7 @@ function __internal.make.stage1() {
             __internal.unar "$downloaded_file" "$SRC_DIR"
         else
             ret="$(basename "$downloaded_file")"
-            ln -s "$downloaded_file" "$SRC_DIR/$ret"
+            ln -sf "$downloaded_file" "$SRC_DIR/$ret"
         fi
         SRC_NAMES[${#SRC_NAMES[@]}]=$ret
     done

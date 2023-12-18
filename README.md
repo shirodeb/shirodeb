@@ -154,3 +154,17 @@ function prepare() {
 
 * raw
   * 空白模板，一生万物。
+
+## Docker
+
+目前ShiroDEB可以通过Docker进行软件包的构建。通过`docker pull shiroko/shirodeb`拉取最新版的ShiroDEB镜像，然后通过如下命令进行构建（请根据实际情况对绑定和环境变量进行修改）：
+
+```bash
+docker run \
+  -e DEBFULLNAME="shiroko" \
+  -e DEBEMAIL="hhx.xxm@gmail.com" \
+  -v $(pwd)/artifacts:/artifacts \
+  -v $(pwd)/downloads:/downloads \
+  -v $(pwd)/org.wireshark:/recipe \
+  shiroko/shirodeb
+```

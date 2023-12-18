@@ -77,7 +77,7 @@ function __internal.download() {
         fi
         if [[ -f "$LOCAL_DD/$download_filename" ]]; then
             log.info "$download_filename is cached. Skip downloading..."
-            ln -s "$LOCAL_DD/$download_filename" "$download_to"
+            ln -sf "$LOCAL_DD/$download_filename" "$download_to"
             download_result[${#download_result[@]}]=$download_to
             continue
         fi
@@ -100,7 +100,7 @@ function __internal.download() {
                 exit -1
             fi
         fi
-        ln -s "$LOCAL_DD/$download_filename" "$download_to"
+        ln -sf "$LOCAL_DD/$download_filename" "$download_to"
         download_result[${#download_result[@]}]="$download_to"
     done
     ret=("${download_result[@]}")
@@ -183,7 +183,7 @@ function __internal.unar.snap() {
     local name="${bname/.snap/}"
     local base_dir="$2/$name"
     ret=$name
-    if [[ $(/usr/bin/ls -Aq "$base_dir") != "" ]]; then
+    if [[ $(/bin/ls -Aq "$base_dir") != "" ]]; then
         log.info "$(basename "$1") is already unarchived"
         return 0
     fi
@@ -232,7 +232,7 @@ function __internal.unar() {
         *)
             log.info "$file_type is unrecognized. Link file to \$SRC_DIR"
             ret="$(basename "$downloaded_file")"
-            ln -s "$downloaded_file" "$unar_to_dir/$ret"
+            ln -sf "$downloaded_file" "$unar_to_dir/$ret"
             ;;
         esac
         ;;

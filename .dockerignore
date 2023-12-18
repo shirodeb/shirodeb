@@ -1,0 +1,9 @@
+# directory
+.git
+.vscode
+
+# file
+.gitignore
+*.md
+profile
+profile.example

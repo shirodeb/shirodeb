@@ -17,7 +17,7 @@ if [[ -z $TEMPLATES_ROOT ]]; then
 fi
 
 __NO_NEED_BUILD_SH=("start" "ingred" "ingredient")
-if [[ $(echo ${__NO_NEED_BUILD_SH[@]} | fgrep -w $1) ]]; then
+if [[ $1 != "" ]] && [[ $(echo ${__NO_NEED_BUILD_SH[@]} | fgrep -w $1) ]]; then
     # Special treat for start command.
     "$@"
     exit $?
