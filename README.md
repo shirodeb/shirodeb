@@ -168,3 +168,5 @@ docker run \
   -v $(pwd)/org.wireshark:/recipe \
   shiroko/shirodeb
 ```
+
+当前本Docker镜像的基础系统为UOS V20 Eagle，但之后可能会逐渐转移到deepin V23 Beige。
