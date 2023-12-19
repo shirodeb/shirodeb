@@ -1,5 +1,7 @@
 # ShiroDEB
 
+[![Build Docker Image](https://github.com/shirodeb/shirodeb/actions/workflows/docker.yml/badge.svg)](https://github.com/shirodeb/shirodeb/actions/workflows/docker.yml)
+
 ShiroDEB是一系列用来打包Deb包的脚本组合，主要用来构建符合UOS规范的deb软件包。
 
 本项目依赖新版的`bash`（以UOS v20自带的版本为基准），并不兼容 POSIX 标准`sh`
